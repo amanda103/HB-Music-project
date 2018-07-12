@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h1>Your user ID is: {{ user_id }}</h1>
+<h1>{{ user_display_name }}</h1>
+<h1>{{ session }}</h1>
+
+<h2>Here are your top artists</h2>
+ {% for artist in artists %}
+<li>{{ artist }}</li>
+    {% endfor %}
+
+
+{% endblock %}
