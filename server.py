@@ -1,4 +1,4 @@
-from flask import Flask, redirect, url_for, session, request, render_template
+from flask import Flask, redirect, url_for, session, request, render_template, jsonify
 from flask_oauthlib.client import OAuth, OAuthException
 import os
 from flask_debugtoolbar import DebugToolbarExtension
@@ -49,21 +49,6 @@ def login():
 
 @app.route('/login/authorized')
 def spotify_authorized():
-    # resp = spotify.authorized_response()
-    # if resp is None:
-    #     return 'Access denied: reason={0} error={1}'.format(
-    #         request.args['error_reason'],
-    #         request.args['error_description']
-    #     )
-    # if isinstance(resp, OAuthException):
-    #     return 'Access denied: {0}'.format(resp.message)
-
-    # What I need to do is figure out how to get the oauth token from
-    # the spotify object - seems like it exists, maybe above method of 
-    # .authorized_response() is just not the way to do so. Then I need to 
-    # render template and redirect probably to homepage or something with
-    # the users top artists - show them their top artists, ask for zipcode
-    # and ask how far they're willing to travel!
 
     resp = spotify.authorized_response()
     if resp is None:
@@ -82,6 +67,7 @@ def spotify_authorized():
 
 @app.route("/account")
 def show_acct_info():
+
     # uncomment this section to test - but wanted to slow down my
     # number of spotify accounts so they don't lock me out!
 
@@ -126,75 +112,50 @@ def logout():
 def display_top_artist_events():
     """searches for top artists on eventbrite"""
 
-    # have to make individual queries for each artist - going to have checkbox
-    # to let user decide which ones they're interested in seeing - how to separate
-    # into different query parameters
-
-
     artists = request.args.getlist('artist')
+    # print(artists)
     zipcode = request.args.get('zipcode')
+    # print(zipcode)
     distance = request.args.get('distance') + "mi"
-    # category = "music"
+    # print(distance)
+
+    requests_list = []
+
+    for artist in artists:
+        artist = "+".join(artist.split())
+        evt_request = {"method": "GET",
+                "relative_url": "events/search/",
+                # "token": eventbrite_token,
+                # "q": artist,
+                # "location.address": zipcode,
+                # "location.within": distance,
+                # "categories": 103
+                "body":"token={}&q={}&location.address={}&location.within={}&categories=103".format(eventbrite_token, artist, zipcode, distance)
+        }
+        requests_list.append(evt_request)
+
+        # sample requests_list printed to the console:
+        
+        # [{'method': 'GET', 'relative_url': 'events/search/', 'body': 'token=ZSI3XV6TQYBNNZSEGAUN&q=The+Dead+Tongues&location.address=95060&location.within=25mi&categories=103'}, {'method': 'GET', 'relative_url': 'events/search/', 'body': 'token=ZSI3XV6TQYBNNZSEGAUN&q=Lomelda&location.address=95060&location.within=25mi&categories=103'}, {'method': 'GET', 'relative_url': 'events/search/', 'body': 'token=ZSI3XV6TQYBNNZSEGAUN&q=Rhiannon+Giddens&location.address=95060&location.within=25mi&categories=103'}]
+
+
+    import pdb; pdb.set_trace()
+
+    headers = {'Authorization': 'Bearer ' + eventbrite_token}
+
+    requests_list_json = jsonify(requests_list)
+
+    response = requests.post(eventbrite_url+"batch/", 
+                            headers=headers,
+                            data={"batch": requests_list_json})
+        # batch response for multiple artists! 
+
+    data = response.json()
 
     
 
-    for artist in artists:
-        payload = {
-            "token": eventbrite_token,
-            "q": artist, 
-            "location.address": zipcode,
-            "location.within": distance,
-            "categories": 103
-        }
-        
-        response = requests.get(eventbrite_url + "events/search/", params=payload)
-        data = response.json()
-
-
-        events = {}
-        # for d in data[artist]:
-        #     venue_id = d['venue_id']
-        #     venue_id = {
-        #                 "id":d['id'], 
-        #                 "url":d["url"], 
-        #                 "start":d["start"], 
-        #                 "end":d["end"],
-        #                 "name":d["name"]
-        #                 }
-        #     events[artist] = venue_id
-     
-
-
-    # If the required information is in the request, look for events
-    # if location and distance:
-
-        # The Eventbrite API requires the distance value to have a measurement
-    #     distance = distance + measurement
-
-        # TODO: Look for afterparties!
-
-        # - Make a request to the Eventbrite API to search for events that match
-        #   the form data.
-        # - (Make sure to save the JSON data from the response to the data
-        #   variable so that it can display on the page as well.)
-
-        # payload ={"token": eventbrite_token, "q": query, 
-        # "location.address": location, "location.within": distance, 
-        # "sort_by": sort}
-
-
-
     return render_template("shows.html", zipcode=zipcode, 
             artists=artists, distance=distance, events=data)
-
-    # If the required info isn't in the request, redirect to the search form
-    # else:
-    #     flash("Please provide all the required information!")
-    #     return redirect("/afterparty-search")
-
-    # return 
-
-# @app.route("/")
 
 
 
