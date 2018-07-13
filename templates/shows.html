@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2>Here are the artists you want to search for</h2>
+ {% for artist in artists %}
+<h2>{{ artist }}<h2>
+<br>
+    {% endfor %}
+
+<h1>Your zipcode is : {{ zipcode }}</h1>
+<h1>Distance you're willing to travel : {{ distance }}</h1>
+<h1>{{ events }}<h1> 
+<p>{{ data }}</p>
+
+
+{% endblock %}

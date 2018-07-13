@@ -6,10 +6,37 @@
 <h1>{{ user_display_name }}</h1>
 <h1>{{ session }}</h1>
 
+<form action="/search-top-artist-events" method="GET">
 <h2>Here are your top artists</h2>
  {% for artist in artists %}
-<li>{{ artist }}</li>
+<input type="checkbox" name="artist" value="{{ artist }}">{{ artist }}
+<br>
     {% endfor %}
+     <div class="form-group">
+      <label for="event-loc">Zipcode</label>
+      <input id="event-loc" class="form-control" type="text" name="zipcode" required>
+    </div>
+  <div class="dropdown">
+      <label>Distance in miles</label>
+      <select name="distance">
+        {% for n in range(0,101,5) %}
+        <option value="{{n}}">{{n}}</option>
+            {% endfor %}
+    </div>
+
+
+
+<!--  NEED SUBMIT BUTTON
+    NEED ZIPCODE
+    DROPDOWN FOR HOW FAR YOU'RE WILLING TO TRAVEL --> 
+
+<input type="submit" value="Search Events!" class="btn">
+</form>
+
+<body>
+
+
+</body>
 
 
 {% endblock %}

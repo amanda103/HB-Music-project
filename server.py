@@ -4,13 +4,15 @@ import os
 from flask_debugtoolbar import DebugToolbarExtension
 import requests
 from pprint import pformat
+import json
+
 
 SPOTIFY_APP_ID = os.environ["SPOTIPY_CLIENT_ID"]
 SPOTIFY_APP_SECRET = os.environ["SPOTIPY_CLIENT_SECRET"]
 
 eventbrite_token = os.environ["EVENTBRITE_TOKEN"]
 
-eventbrite_url = "https://eventbriteapi.com/v3"
+eventbrite_url = "https://www.eventbriteapi.com/v3/"
 
 
 app = Flask(__name__)
@@ -80,19 +82,29 @@ def spotify_authorized():
 
 @app.route("/account")
 def show_acct_info():
-    me = spotify.get('v1/me').data
-    user_id = me['id']
-    user_display_name = me['display_name']
+    # uncomment this section to test - but wanted to slow down my
+    # number of spotify accounts so they don't lock me out!
 
-    scope = 'user-top-read'
+    """~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"""
+    
+    # me = spotify.get('v1/me').data
+    # user_id = me['id']
+    # user_display_name = me['display_name']
 
-    items = spotify.get('v1/me/top/artists').data['items']
-    artists = []
-    for item in items:
-        artist = item['name']
-        if artist not in artists:
-            artists.append(artist)
-    session['users_artists'] = artists
+    # scope = 'user-top-read'
+
+    # items = spotify.get('v1/me/top/artists').data['items']
+    # artists = []
+    # for item in items:
+    #     artist = item['name']
+    #     if artist not in artists:
+    #         artists.append(artist)
+    # session['users_artists'] = artists
+    """~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"""
+
+    artists =['Angelo De Augustine', 'The Dead Tongues', 'The Stray Birds', 'Shannon Lay', 'Lomelda', 'Anna St. Louis', 'Rhiannon Giddens', 'A. Savage']
+    user_id = "21wmm4r33y7chvtoc67kxxouq"
+    user_display_name = "Amanda Cantelope"
 
     return render_template("hello.html", user_id=user_id, user_display_name=user_display_name, artists=artists)
 
@@ -103,28 +115,61 @@ def get_spotify_oauth_token():
     return session.get('oauth_token')
 
 
-
 @app.route("/logout")
 def logout():
     del session['oauth_token']
 
     return render_template("homepage.html")
 
+
 @app.route("/search-top-artist-events")
 def display_top_artist_events():
     """searches for top artists on eventbrite"""
 
-    query = request.args.get('query')
-    location = request.args.get('location')
-    distance = request.args.get('distance')
-    measurement = "m"
+    # have to make individual queries for each artist - going to have checkbox
+    # to let user decide which ones they're interested in seeing - how to separate
+    # into different query parameters
+
+
+    artists = request.args.getlist('artist')
+    zipcode = request.args.get('zipcode')
+    distance = request.args.get('distance') + "mi"
+    # category = "music"
+
+    
+
+    for artist in artists:
+        payload = {
+            "token": eventbrite_token,
+            "q": artist, 
+            "location.address": zipcode,
+            "location.within": distance,
+            "categories": 103
+        }
+        
+        response = requests.get(eventbrite_url + "events/search/", params=payload)
+        data = response.json()
+
+
+        events = {}
+        # for d in data[artist]:
+        #     venue_id = d['venue_id']
+        #     venue_id = {
+        #                 "id":d['id'], 
+        #                 "url":d["url"], 
+        #                 "start":d["start"], 
+        #                 "end":d["end"],
+        #                 "name":d["name"]
+        #                 }
+        #     events[artist] = venue_id
+     
 
 
     # If the required information is in the request, look for events
-    if location and distance:
+    # if location and distance:
 
         # The Eventbrite API requires the distance value to have a measurement
-        distance = distance + measurement
+    #     distance = distance + measurement
 
         # TODO: Look for afterparties!
 
@@ -132,27 +177,24 @@ def display_top_artist_events():
         #   the form data.
         # - (Make sure to save the JSON data from the response to the data
         #   variable so that it can display on the page as well.)
-        payload ={"token": eventbrite_token, "q": query, 
-        "location.address": location, "location.within": distance, 
-        "sort_by": sort}
+
+        # payload ={"token": eventbrite_token, "q": query, 
+        # "location.address": location, "location.within": distance, 
+        # "sort_by": sort}
 
 
-        response = requests.get(eventbrite_url + "events/search", params=payload)
-        data = response.json()
 
-        # data = {'This': ['Some', 'mock', 'JSON']}
-        events = []
-
-        return render_template("shows.html",
-                               data=pformat(data),
-                               results=events)
+    return render_template("shows.html", zipcode=zipcode, 
+            artists=artists, distance=distance, events=data)
 
     # If the required info isn't in the request, redirect to the search form
-    else:
-        flash("Please provide all the required information!")
-        return redirect("/afterparty-search")
+    # else:
+    #     flash("Please provide all the required information!")
+    #     return redirect("/afterparty-search")
 
-    return 
+    # return 
+
+# @app.route("/")
 
 
 
