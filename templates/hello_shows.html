@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<p>{{ response }}</p>
+
+<h1>Your user ID is: {{ session['user_info']['user_id'] }}</h1>
+<h1>{{ session['user_info']['user_display_name'] }}</h1>
+<!-- <h1>{{ session }}</h1> -->
+<h1>{{ items }}</h1>
+<h1>You have this many followers: {{ session['user_info']['user_followers'] }}</h1>
+<img src="{{ session['user_info']['user_pic_url'] }}" alt="Profile Picture">
+
+{% for show in shows %}
+
+<p>CONCERT: {{ session['possible_events'][show]['name']}}</p>
+<a href = "{{ session['possible_events'][show]['url'] }}">{{ session['possible_events'][show]['name'] }}</a>
+<br>
+<img src="{{ session['possible_events'][show]['logo']['url']}}">
+
+
+
+
+{% endfor %}
+
+{% endblock %}

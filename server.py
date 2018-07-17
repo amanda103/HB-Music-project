@@ -2,10 +2,13 @@ from flask import Flask, redirect, url_for, session, request, render_template, j
 from flask_oauthlib.client import OAuth, OAuthException
 import os
 from flask_debugtoolbar import DebugToolbarExtension
+from urllib.parse import urlencode
 import requests
 from pprint import pformat
 import json
 
+# from model import
+# remember to source classes from model!
 
 SPOTIFY_APP_ID = os.environ["SPOTIPY_CLIENT_ID"]
 SPOTIFY_APP_SECRET = os.environ["SPOTIPY_CLIENT_SECRET"]
@@ -73,26 +76,62 @@ def show_acct_info():
 
     """~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"""
     
-    # me = spotify.get('v1/me').data
-    # user_id = me['id']
-    # user_display_name = me['display_name']
+    me = spotify.get('v1/me').data
 
-    # scope = 'user-top-read'
+    session['user_info'] = {'user_id' : me['id'],
+                            'user_display_name' : me['display_name'],
+                            'user_followers' : me['followers']['total'],
+                            'user_pic_url' : me['images'][0]['url']
+                            }
 
-    # items = spotify.get('v1/me/top/artists').data['items']
-    # artists = []
-    # for item in items:
-    #     artist = item['name']
-    #     if artist not in artists:
-    #         artists.append(artist)
-    # session['users_artists'] = artists
+
+    scope = 'user-top-read'
+
+    items = spotify.get('v1/me/top/artists?time_range=long_term&limit=50&offset=1').data['items']
+    artists_info = {}
+    artist_ids = []
+
+    for item in items:
+        artists_info[item['name']] = {'id': item['id'],
+                                    'art_url': item['images'][0]['url'],
+                                    'related_artist_info': []
+                                    }
+        artist_ids.append(item['id'])
+        #only getting the first image - is this important? idk
+    session['users_artists'] = artists_info
     """~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"""
 
-    artists =['Angelo De Augustine', 'The Dead Tongues', 'The Stray Birds', 'Shannon Lay', 'Lomelda', 'Anna St. Louis', 'Rhiannon Giddens', 'A. Savage']
-    user_id = "21wmm4r33y7chvtoc67kxxouq"
-    user_display_name = "Amanda Cantelope"
+    # dummy data so i'm not pinging spotify every time!
 
-    return render_template("hello.html", user_id=user_id, user_display_name=user_display_name, artists=artists)
+    # artists =['Angelo De Augustine', 'The Dead Tongues', 'The Stray Birds', 'Shannon Lay', 'Lomelda', 'Anna St. Louis', 'Rhiannon Giddens', 'A. Savage']
+    # user_id = "21wmm4r33y7chvtoc67kxxouq"
+    # user_display_name = "Amanda Cantelope"
+    # user_followers = 0
+    # user_pic_url = "http://www.dogbazar.org/wp-content/uploads/2014/09/british-bull-dog-puppies.jpg"
+
+
+    # TABLED FOR NOW - LOOKING AT HOW TO GET RELATED ARTISTS TO DISPLAY MORE SHOWS
+    # data = []
+    # for item in artist_ids:
+    #     url = "https://api.spotify.com/v1/artists/" + item + "/related-artists"
+    #     data.append({"method": "GET", "relative_url": url})
+
+
+
+    # headers = {'Authorization': 'Bearer ' + session['oauth_token'][0]}
+
+    # response = spotify.get("https://api.spotify.com/v1/artists/" + "batch/", 
+    #                         headers=headers,
+    #                         data={"batch": json.dumps(data)})
+    # import pdb; pdb.set_trace()
+
+    # response = len(response.data)
+
+
+
+    return render_template("hello.html",
+                            artists_info=artists_info
+                            )
 
 
 
@@ -112,51 +151,52 @@ def logout():
 def display_top_artist_events():
     """searches for top artists on eventbrite"""
 
-    artists = request.args.getlist('artist')
-    # print(artists)
+    artists  = session['users_artists']
     zipcode = request.args.get('zipcode')
-    # print(zipcode)
-    distance = request.args.get('distance') + "mi"
-    # print(distance)
+    distance = "100mi"
 
     requests_list = []
 
-    for artist in artists:
+    for artist in artists.keys():
         artist = "+".join(artist.split())
         evt_request = {"method": "GET",
                 "relative_url": "events/search/",
-                # "token": eventbrite_token,
-                # "q": artist,
-                # "location.address": zipcode,
-                # "location.within": distance,
-                # "categories": 103
                 "body":"token={}&q={}&location.address={}&location.within={}&categories=103".format(eventbrite_token, artist, zipcode, distance)
         }
         requests_list.append(evt_request)
 
-        # sample requests_list printed to the console:
-        
-        # [{'method': 'GET', 'relative_url': 'events/search/', 'body': 'token=ZSI3XV6TQYBNNZSEGAUN&q=The+Dead+Tongues&location.address=95060&location.within=25mi&categories=103'}, {'method': 'GET', 'relative_url': 'events/search/', 'body': 'token=ZSI3XV6TQYBNNZSEGAUN&q=Lomelda&location.address=95060&location.within=25mi&categories=103'}, {'method': 'GET', 'relative_url': 'events/search/', 'body': 'token=ZSI3XV6TQYBNNZSEGAUN&q=Rhiannon+Giddens&location.address=95060&location.within=25mi&categories=103'}]
 
-
-    import pdb; pdb.set_trace()
 
     headers = {'Authorization': 'Bearer ' + eventbrite_token}
 
-    requests_list_json = jsonify(requests_list)
 
     response = requests.post(eventbrite_url+"batch/", 
                             headers=headers,
-                            data={"batch": requests_list_json})
-        # batch response for multiple artists! 
+                            data={"batch": json.dumps(requests_list)})
 
     data = response.json()
 
+    # with open('xxx.json', 'w') as outfile:
+    #  json.dump(response.json(), outfile, indent=4)
+
+    from process import process_eventbrite_json
+    
+    shows = process_eventbrite_json(data, artists)
+
+    session['possible_events'] = shows
     
 
-    return render_template("shows.html", zipcode=zipcode, 
-            artists=artists, distance=distance, events=data)
+    return render_template("shows.html", data=data, zipcode=zipcode, 
+            artists=artists, distance=distance, shows=shows)
 
+
+@app.route("/account/shows")
+def display_user_shows():
+    """ shows account page with shows they're going to"""
+
+    shows = request.args.getlist('shows')
+
+    return render_template("hello_shows.html", shows=shows)
 
 
 
@@ -164,5 +204,6 @@ def display_top_artist_events():
 if __name__ == '__main__':
     app.run(host='0.0.0.0')
     app.debug = True
+    # connect_to_db(app)
     app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
     DebugToolbarExtension(app)

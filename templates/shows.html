@@ -9,9 +9,27 @@
     {% endfor %}
 
 <h1>Your zipcode is : {{ zipcode }}</h1>
-<h1>Distance you're willing to travel : {{ distance }}</h1>
-<h1>{{ events }}<h1> 
-<p>{{ data }}</p>
+<h1>Here are the shows within {{ distance }} of you!</h1>
+<h1>SHOWS FOR YOU</h1>
+{% for show in shows.values() %}
+    <ul>
+        <form action="/account/shows" method="GET">
+        <li><p>Event ID: {{ show['event_id'] }}</p></li>
+        <li><p>CONCERT: {{ show['name'] }}</p></li>
+        <li><p>Venue ID: {{ show['venue_id'] }}</p></li>
+        <li><img src="{{ show['logo']['url'] }}"></li>
+        <li><p>Start time: {{ show['start'] }}</p></li>
+        <li><p>End time: {{ show['end'] }}</p></li>
+        <div>
+        <input type="checkbox" name="shows"
+               value="{{ show['event_id'] }}"/>{{ show['name']}}
+        <label >I'm going to this event!</label>
 
+    </div>
+    </ul>
+    
+{% endfor %}
+    <input type="submit" value="YOU'RE GOING!" class="btn">
+    </form>
 
 {% endblock %}

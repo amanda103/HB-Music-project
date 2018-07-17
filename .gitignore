@@ -1,3 +1,5 @@
 env
 secrets.sh
-.DS_Store
+*.DS_Store
+*.pyc
+*.json
