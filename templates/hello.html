@@ -2,7 +2,15 @@
 
 {% block content %}
 
-<p>{{ response }}</p>
+
+  {% if messages %}
+    <ul class=flashes>
+    {% for message in messages %}
+      {{ message }}
+    {% endfor %}
+    </ul>
+  {% endif %}
+
 
 <h1>Your user ID is: {{ session['user_info']['user_id'] }}</h1>
 <h1>{{ session['user_info']['user_display_name'] }}</h1>
@@ -14,10 +22,14 @@
 
 <form action="/search-top-artist-events" method="GET">
 <h2>Here are your top artists</h2>
- {% for key, value in artists_info.items() %}
+ {% for value in artists_info.items() %}
+ <input type="hidden" class="id" name="{{value['id']}}" value="{{value['id']}}">
+ <input type="hidden" class="name" name="{{key}}" value="{{key}}">
+ <input type="hidden" class="art_url" name="{{value['art_url']}}" value="{{value['art_url']}}">
+ <input type="hidden" class="related_artists" name="{{value['related_artist_info']}}" value="{{value['related_artist_info']}}">
+
 <p> {{ key }}</p>
 <img src="{{ value['art_url'] }}">
-<p> Artist ID: {{ value['id'] }}
 
 <br>
     {% endfor %}
