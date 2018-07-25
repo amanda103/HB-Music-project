@@ -17,30 +17,31 @@ def process_eventbrite_json(data, artists):
     shows = {}
 
     for count, item in enumerate(data, 0):
-        body = json.loads(item['body'])
-        events = body['events']
-        for event in events:
-            if len(event) > 0:
-                if event.get('logo') is None:
-                    logo = None
-                else:
-                    logo = event['logo']['original']
-                    start = event['start']['local']
-                    start = datetime.strptime(start, "%Y-%m-%dT%H:%M:%S")
-                    end = event['end']['local']
-                    end = datetime.strptime(end, "%Y-%m-%dT%H:%M:%S")
-                    shows[event['id']] = ({'event_id' : event['id'],
-                                            'venue_id' : event['venue_id'],
-                                            'logo' : logo,
-                                            'start' : start,
-                                            'end' : end,
-                                            'name' : event['name']['text'],
-                                            'url' : event['url'],
-                                            'artist_id' : list(artists.values())[count]['id'],
-                                            'artist_name' : list(artists.keys())[count],
-                                            'artist_art_url' : list(artists.values())[count]['art_url'],
-                                            'related_artists' : list(artists.values())[count]['related_artist_info'],
-                                            })
+        if item['code'] == 200:
+            body = json.loads(item['body'])
+            events = body['events']
+            for event in events:
+                if len(event) > 0:
+                    if event.get('logo') is None:
+                        logo = None
+                    else:
+                        for artist in artists:
+                            logo = event['logo']['original']
+                            start = event['start']['local']
+                            start = datetime.strptime(start, "%Y-%m-%dT%H:%M:%S")
+                            end = event['end']['local']
+                            end = datetime.strptime(end, "%Y-%m-%dT%H:%M:%S")
+                            shows[event['id']] = ({'event_id' : event['id'],
+                                                    'venue_id' : event['venue_id'],
+                                                    'logo' : logo,
+                                                    'start' : start,
+                                                    'end' : end,
+                                                    'name' : event['name']['text'],
+                                                    'url' : event['url'],
+                                                    # 'artist_id' : artists[count]['spotify_artist_id'],
+                                                    'artist_name' : artist,
+                                                    # 'artist_art_url' : artists[count]['art_url'],
+                                                    })
             else:
                 continue
 
@@ -48,6 +49,38 @@ def process_eventbrite_json(data, artists):
 
 
 # shows = process_eventbrite_json(data, artists)
+
+def process_related_artists(related_artists, user):
+    """takes in selected artists, sends to spotify and processes related artists for helpful info"""
+
+    # related_artists_dict = {}
+    # for artist_id in selected_artists:
+    #     related_artists = spotify.get('v1/artists/{}/related-artists'.format(artist_id)).data
+    #     related_artists_dict[artist_id] = related_artists
+
+    displayed_artists = {}
+    for artist_id, artists in related_artists.items():
+        displayed_artists[artist_id] = []
+        for value in artists.values():
+            for v in value:
+                displayed_artists.get(artist_id).append({"spotify_artist_id": v['id'],
+                                                     "name": v['name'],
+                                                     "art_url": v['images'][0]['url'],
+                                                     "users": [user]})
+
+    return displayed_artists
+
+
+    # trying to pull all this out so that I can do it in this file instead
+    # of server but this file can't access db or Artist class or do the 
+    # spotify request because all of it happens in the server file where all
+    # that stuff is imported. Good idea to put it all in here also or transition
+    # things to server.py? Not sure. Have to ask.
+                
+        
+
+
+
 
 
 

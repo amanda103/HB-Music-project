@@ -7,13 +7,15 @@
 
 <img src="{{ session['user_info']['user_pic_url'] }}" alt="Profile Picture">
 
-
-<p>{{shows}}}</p>
-
-
-
-
-
+{% for show in shows %}
+<p>{{show.event_name}} on {{show.start.strftime("%A, %B %d, %Y at %I:%M%p")}}</p>
+<img src="{{show.logo_url}}">
 {% endfor %}
+
+
+
+
+
+
 
 {% endblock %}

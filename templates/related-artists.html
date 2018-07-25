@@ -1,0 +1,18 @@
+
+
+
+<div class="related">
+{% for artists in related_artists.values() %}
+  {% for artist in artists %}
+
+    <p class = "artists"> {{ artist['name'] }}</p>
+
+    <img src="{{ artist['art_url'] }}" class="related-artist" data-artistId="{{artist['id']}}">
+    <br>
+    <input type="checkbox" name="search-events-artists"
+                       value="{{ artist['name'] }}"/>
+    <label>I want to see these events!</label>
+
+  {% endfor %}
+{% endfor %}
+</div>

@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<h1> here's your selected artists: {{ selected_artists }}</h1>
+
+<h1> here's the related artists from spotify {{ related_artists }}</h1>
 
 <h2>Here are the artists you want to search for</h2>
  {% for artist in artists %}
@@ -8,10 +11,9 @@
 <br>
     {% endfor %}
 
-<h1>Your zipcode is : {{ zipcode }}</h1>
+<h1 id="zipcode">Your zipcode is : {{ zipcode }}</h1>
 <h1>Here are the shows within {{ distance }}!</h1>
-<h1>SHOWS FOR YOU</h1>
-<h1>{{ shows }}</h1>
+
 <h1></h1>
 {% if shows %}
         <form action="/account/shows" method="GET">
@@ -56,7 +58,7 @@
     </form>
 
 {% else %}
-<h1>You're already going to all available shows near you! Try searching another zipcode :)</h1> 
+<h1>You're already going to all available shows near you! Try searching in another location</h1> 
 <form method="get" action="/account/shows">
     <button type="submit">My shows</button>
 </form>

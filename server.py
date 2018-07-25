@@ -11,8 +11,8 @@ from datetime import datetime
 
 from model import User, Artist, Event, UsersEvents, UsersArtists, ArtistsEvents, db, connect_to_db
 
-SPOTIFY_APP_ID = os.environ["SPOTIPY_CLIENT_ID"]
-SPOTIFY_APP_SECRET = os.environ["SPOTIPY_CLIENT_SECRET"]
+SPOTIFY_APP_ID = os.environ["SPOTIFY_CLIENT_ID"]
+SPOTIFY_APP_SECRET = os.environ["SPOTIFY_CLIENT_SECRET"]
 eventbrite_token = os.environ["EVENTBRITE_TOKEN"]
 eventbrite_url = "https://www.eventbriteapi.com/v3/"
 
@@ -85,61 +85,43 @@ def show_acct_info():
                             'user_pic_url' : me['images'][0]['url']
                             }
 
-    is_user_there = db.session.query(User).filter(User.spotify_user_id == user_id).first()
+    user = db.session.query(User).filter(User.spotify_user_id == user_id).first()
 
-    if is_user_there:
+    if user:
         flash("WELCOME BACK")
     else:
-        new_user = User(spotify_user_id=me['id'], pic_url=me['images'][0]['url'], display_name=me['display_name'])
-        db.session.add(new_user)
+        user = User(spotify_user_id=me['id'], pic_url=me['images'][0]['url'], display_name=me['display_name'])
+        db.session.add(user)
         db.session.commit()
 
     scope = 'user-top-read'
 
-    items = spotify.get('v1/me/top/artists?time_range=long_term&limit=50&offset=1').data['items']
-    artists_info = {}
-    # artist_ids = []
+    items = spotify.get('v1/me/top/artists?time_range=short_term&limit=50&offset=1').data['items']
 
     for item in items:
-        artists_info[item['name']] = {'id': item['id'],
-                                    'art_url': item['images'][0]['url'],
-                                    'related_artist_info': []
-                                    }
-        # artist_ids.append(item['id'])
-        #only getting the first image - is this important? idk
+        if item['id'] not in [artist.spotify_artist_id for artist in user.artists]:
+            artist = Artist(spotify_artist_id=item['id'],
+                        name=item['name'],
+                        art_url=item['images'][0]['url'],
+                        users=[user])
+            db.session.add(artist)
+        else:
+            artist = db.session.query(Artist).filter(Artist.spotify_artist_id == item['id']).one()
+            artist.users.append(user)
+    db.session.commit()
+        
 
-    # Maybe I would make an instance of the Artist class here so that I could query the 
-    # database on the next go round - seems hard to pass all this info through session/jinja/jquery
-
-   
-
-    # TABLED FOR NOW - LOOKING AT HOW TO GET RELATED ARTISTS TO DISPLAY MORE SHOWS
-    # data = []
-    # for item in artist_ids:
-    #     url = "https://api.spotify.com/v1/artists/" + item + "/related-artists"
-    #     data.append({"method": "GET", "relative_url": url})
-
-
-
-    # headers = {'Authorization': 'Bearer ' + session['oauth_token'][0]}
-
-    # response = spotify.get("https://api.spotify.com/v1/artists/" + "batch/", 
-    #                         headers=headers,
-    #                         data={"batch": json.dumps(data)})
-    # import pdb; pdb.set_trace()
-
-    # response = len(response.data)
-
-
+    #only getting the first image - is this important? idk
 
     return render_template("hello.html",
-                            artists_info=artists_info,
+                            artists_info=items,
                             )
 
 
 
 @spotify.tokengetter
 def get_spotify_oauth_token():
+
     return session.get('oauth_token')
 
 
@@ -150,44 +132,80 @@ def logout():
 
     return render_template("homepage.html")
 
+# get related artists
+# handle (AJAX) requests from client 
+# client will send a single artist id
+# server will look up related artists via spotify api
+# sever will return a chunk of html to the client
+@app.route("/related-artists")
+def display_related_artists():
 
-@app.route("/search-top-artist-events")
+    user_id = session['user_info']['user_id']
+
+    user = User.query.filter_by(spotify_user_id=user_id).one()
+
+    artist_id = request.args.get('artist_id')
+
+    # selected_artists = request.args.getlist("artist-ids")
+    # no longer want to do this for all of them - do dynamically one at a time once
+    # user clicks picture! have to rehash the related_artists_dict below then...
+
+    from process import process_related_artists
+
+    related_artists_dict = {}
+    # for artist_id in selected_artists:
+    related_artists = spotify.get('v1/artists/{}/related-artists'.format(artist_id)).data
+    related_artists_dict[artist_id] = related_artists
+
+    related_artists = process_related_artists(related_artists_dict, user)
+    # return render_template("related_artists.html", related_artists=related_artists)
+    # how to move this over to the jinja template and into new html???
+    # return render_template("related-artists.html", related_artists=related_artists)
+
+    return render_template("related-artists.html", related_artists=related_artists)   
+
+@app.route("/search-events")
 def display_top_artist_events():
     """searches for top artists on eventbrite"""
 
-    # having trouble deciding how to grab each artist on by one bc the number of artists/inputs
-    # generated depends on the spotify data.
-    # maybe put artists in db on first go round! Keep track of artists??
+    user_id = session['user_info']['user_id']
 
-    # artists  = { "artist_name" : request.args.get("")
-
-    #             }
-
-
+    user = User.query.filter_by(spotify_user_id=user_id).one()
 
     zipcode = request.args.get('zipcode')
+    # import zipcodes
+    # if zipcodes.is_valid(zipcode):
+    #     continue
+    # else:
+        # what to do if zipcode isn't valid!! don't reload!
+    # pull this function out and put it in process file --> but what to do if it's not
+    # valid?? Probably prevent default?? Who knows.
+
     distance = "100mi"
-
+    # hardcoded now but maybe give user option once I have more artists to search
+    
+    
+    artists = request.args.getlist("search-events-artists")
     requests_list = []
-
-    for artist in artists.keys():
-        artist = "+".join(artist.split())
-        evt_request = {"method": "GET",
-                       "relative_url": "events/search/",
-                       "body":"token={}&q={}&location.address={}&location.within={}&categories=103".format(eventbrite_token, artist, zipcode, distance)
-                        }
-        requests_list.append(evt_request)
-
+    if artists:
+        for artist in artists:
+            artist = "+".join(artist.split())
+            evt_request = {"method": "GET",
+                           "relative_url": "events/search/",
+                           "body":"token={}&q={}&location.address={}&location.within={}&categories=103".format(eventbrite_token, artist, zipcode, distance)
+                            }
+            requests_list.append(evt_request)
+    else:
+        return redirect("/account")
 
 
     headers = {'Authorization': 'Bearer ' + eventbrite_token}
 
-
     response = requests.post(eventbrite_url+"batch/", 
                             headers=headers,
                             data={"batch": json.dumps(requests_list)})
-
     data = response.json()
+
 
     from process import process_eventbrite_json
     
@@ -203,47 +221,38 @@ def display_top_artist_events():
     # 'artist_id': '1MK90Dn9tMbk16g2Vb2NQp',
     # 'artist_name': 'A. Savage'}
 
-    user_id = session['user_info']['user_id']
-
-    user = User.query.filter_by(spotify_user_id=user_id).one()
-    
-
     return render_template("shows.html", data=data, zipcode=zipcode, 
-            artists=artists, distance=distance, shows=shows)
+            artists=artists, distance=distance, shows=shows, selected_artists=artists)
 
 
 @app.route("/account/shows")
-def display_user_shows():
-    """ shows account page with shows they're going to"""
+def process_user_shows():
+    """processes selected shows and redirects to viewpage"""
 
     user_id = session['user_info']['user_id']
 
     user = User.query.filter_by(spotify_user_id=user_id).one()
 
-    # look at user.events and verify it doesn't match the one they clicked to say
-    # they've already added it.
-
-    if user.events:
-        already_going = user.events
-    else:
-        already_going = "You haven't saved any shows before now!"
-
     shows = request.args.getlist('shows')
-
-    print("THIS IS YOUR SHOW LIST", shows)
-
-    print("THIS IS YOUR REQUEST DICT", request.args.getlist("_artist_id"))
 
     if shows:
         for show in shows:
             artists = db.session.query(Artist).filter(Event.eventbrite_event_id==show).all()
             # artists at event that way it will be ALL artists at event id
+            # add line about artist in db or no to be sure that the artist get's added
             if show not in [event.eventbrite_event_id for event in user.events]:
-                artist = Artist(spotify_artist_id=request.args.get(show+"_artist_id"),
-                                name=request.args.get(show+"_artist_name"),
-                                art_url=request.args.get(show+"_artist_art_url"),
-                                )
-                artists.append(artist)
+                # this keeps throwing an error -- why is it still showing me shows that are
+                # alreday in db??
+
+                is_artist_there = db.session.query(Artist).filter(Artist.spotify_artist_id == request.args.get(show+"_artist_id")).first()
+                if is_artist_there:
+                    artists.append(is_artist_there)
+                else:
+                    artist = Artist(spotify_artist_id=request.args.get(show+"_artist_id"),
+                                    name=request.args.get(show+"_artist_name"),
+                                    art_url=request.args.get(show+"_artist_art_url"),
+                                    )
+                    artists.append(artist)
 
                 new_show = Event(eventbrite_event_id=request.args.get(show+"_eventbrite_event_id"),
                                   event_name=request.args.get(show+"_event_name"),
@@ -258,17 +267,21 @@ def display_user_shows():
                 db.session.add(new_show)
         db.session.commit()
 
-
-
-
-
     # remember to save attached to user --> create new artist/event if it's not there already
     # check to see if event is already there for that person
     # user.events.append(object for event)
     # use relationships instead of raw sql 
 
-    return render_template("hello_shows.html", shows=shows, already_going=already_going)
-    # return redirect to new thing.
+    return redirect("/account/shows/attending")
+
+@app.route("/account/shows/attending")
+def display_user_shows():
+    """Shows user which events they're going to"""
+
+    user = User.query.filter_by(spotify_user_id=session['user_info']['user_id']).one()
+
+    return render_template("hello_shows.html", shows=user.events)
+
 
 
 
