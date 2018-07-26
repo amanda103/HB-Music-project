@@ -16,7 +16,7 @@ def process_eventbrite_json(data, artists):
 
     shows = {}
 
-    for count, item in enumerate(data, 0):
+    for item in data:
         if item['code'] == 200:
             body = json.loads(item['body'])
             events = body['events']
@@ -25,7 +25,10 @@ def process_eventbrite_json(data, artists):
                     if event.get('logo') is None:
                         logo = None
                     else:
+                        # separate this into dif function?
                         for artist in artists:
+                            # maybe don't need artist in artists if it's not even
+                            # assigning right ??
                             logo = event['logo']['original']
                             start = event['start']['local']
                             start = datetime.strptime(start, "%Y-%m-%dT%H:%M:%S")
@@ -39,11 +42,13 @@ def process_eventbrite_json(data, artists):
                                                     'name' : event['name']['text'],
                                                     'url' : event['url'],
                                                     # 'artist_id' : artists[count]['spotify_artist_id'],
-                                                    'artist_name' : artist,
+                                                    # 'artist_name' : artist,
                                                     # 'artist_art_url' : artists[count]['art_url'],
+                                                    # this part isn't working! how to 
+                                                    # connect artist with the shows??
                                                     })
-            else:
-                continue
+        else:
+            continue
 
     return shows
 
@@ -58,15 +63,20 @@ def process_related_artists(related_artists, user):
     #     related_artists = spotify.get('v1/artists/{}/related-artists'.format(artist_id)).data
     #     related_artists_dict[artist_id] = related_artists
 
+    # truncate dict if it's longer than a certain number
+
     displayed_artists = {}
     for artist_id, artists in related_artists.items():
         displayed_artists[artist_id] = []
+        # while len(displayed_artists[artist_id]) <= 4:
+        # still figuring out how to limit the number of related artists I get back
+        # that wya I don't end up with 20 to display! But maybe that's not a bad thing?
         for value in artists.values():
             for v in value:
                 displayed_artists.get(artist_id).append({"spotify_artist_id": v['id'],
-                                                     "name": v['name'],
-                                                     "art_url": v['images'][0]['url'],
-                                                     "users": [user]})
+                                                         "name": v['name'],
+                                                         "art_url": v['images'][0]['url'],
+                                                         "users": [user]})
 
     return displayed_artists
 

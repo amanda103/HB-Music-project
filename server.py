@@ -42,14 +42,13 @@ def before_request():
 def index():
     return redirect(url_for('login'))
 
-
 @app.route('/login')
 def login():
     callback = url_for(
         'spotify_authorized',
         next=request.args.get('next') or request.referrer or None,
         _external=True
-    )
+        )
     return spotify.authorize(callback=callback)
 
 
@@ -75,17 +74,7 @@ def spotify_authorized():
 @app.route("/account")
 def show_acct_info():
 
-    me = spotify.get('v1/me').data
-
-    user_id = me['id']
-
-    session['user_info'] = {'user_id' : me['id'],
-                            'user_display_name' : me['display_name'],
-                            'user_followers' : me['followers']['total'],
-                            'user_pic_url' : me['images'][0]['url']
-                            }
-
-    user = db.session.query(User).filter(User.spotify_user_id == user_id).first()
+    user = get_user_object()
 
     if user:
         flash("WELCOME BACK")
@@ -94,29 +83,11 @@ def show_acct_info():
         db.session.add(user)
         db.session.commit()
 
-    scope = 'user-top-read'
-
-    items = spotify.get('v1/me/top/artists?time_range=short_term&limit=50&offset=1').data['items']
-
-    for item in items:
-        if item['id'] not in [artist.spotify_artist_id for artist in user.artists]:
-            artist = Artist(spotify_artist_id=item['id'],
-                        name=item['name'],
-                        art_url=item['images'][0]['url'],
-                        users=[user])
-            db.session.add(artist)
-        else:
-            artist = db.session.query(Artist).filter(Artist.spotify_artist_id == item['id']).one()
-            artist.users.append(user)
-    db.session.commit()
-        
-
+    items = gets_user_top_artists(user)
     #only getting the first image - is this important? idk
+    #only saving the top artists - not related artiests
 
-    return render_template("hello.html",
-                            artists_info=items,
-                            )
-
+    return render_template("hello.html", artists_info=items)
 
 
 @spotify.tokengetter
@@ -132,35 +103,19 @@ def logout():
 
     return render_template("homepage.html")
 
-# get related artists
-# handle (AJAX) requests from client 
-# client will send a single artist id
-# server will look up related artists via spotify api
-# sever will return a chunk of html to the client
+
 @app.route("/related-artists")
 def display_related_artists():
 
-    user_id = session['user_info']['user_id']
-
-    user = User.query.filter_by(spotify_user_id=user_id).one()
+    user = get_user_object()
 
     artist_id = request.args.get('artist_id')
 
-    # selected_artists = request.args.getlist("artist-ids")
-    # no longer want to do this for all of them - do dynamically one at a time once
-    # user clicks picture! have to rehash the related_artists_dict below then...
+    related_artists_dict = get_related_artists(artist_id, user)
 
     from process import process_related_artists
 
-    related_artists_dict = {}
-    # for artist_id in selected_artists:
-    related_artists = spotify.get('v1/artists/{}/related-artists'.format(artist_id)).data
-    related_artists_dict[artist_id] = related_artists
-
     related_artists = process_related_artists(related_artists_dict, user)
-    # return render_template("related_artists.html", related_artists=related_artists)
-    # how to move this over to the jinja template and into new html???
-    # return render_template("related-artists.html", related_artists=related_artists)
 
     return render_template("related-artists.html", related_artists=related_artists)   
 
@@ -168,9 +123,7 @@ def display_related_artists():
 def display_top_artist_events():
     """searches for top artists on eventbrite"""
 
-    user_id = session['user_info']['user_id']
-
-    user = User.query.filter_by(spotify_user_id=user_id).one()
+    user = get_user_object()
 
     zipcode = request.args.get('zipcode')
     # import zipcodes
@@ -186,40 +139,15 @@ def display_top_artist_events():
     
     
     artists = request.args.getlist("search-events-artists")
-    requests_list = []
     if artists:
-        for artist in artists:
-            artist = "+".join(artist.split())
-            evt_request = {"method": "GET",
-                           "relative_url": "events/search/",
-                           "body":"token={}&q={}&location.address={}&location.within={}&categories=103".format(eventbrite_token, artist, zipcode, distance)
-                            }
-            requests_list.append(evt_request)
+        data = get_eventbrite_json(artists, distance, zipcode)
     else:
         return redirect("/account")
-
-
-    headers = {'Authorization': 'Bearer ' + eventbrite_token}
-
-    response = requests.post(eventbrite_url+"batch/", 
-                            headers=headers,
-                            data={"batch": json.dumps(requests_list)})
-    data = response.json()
 
 
     from process import process_eventbrite_json
     
     shows = process_eventbrite_json(data, artists)
-    # EXAMPLE DATA --> this is what one show will look like in dict of shows
-    # {'48141455389': {'event_id': '48141455389',
-    # 'venue_id': '24141496', 
-    # 'logo': {'url': 'https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F47272144%2F188968768274%2F1%2Foriginal.jpg?auto=compress&s=885b31c9ed54c4e143a61547fc9f583b', 'width': 960, 'height': 535},
-    # 'start': datetime.datetime(2018, 10, 12, 19, 0),
-    # 'end': datetime.datetime(2018, 10, 13, 2, 0), 'name':
-    # 'Savage Road comes to the Dawg House',
-    # 'url': 'https://www.eventbrite.com/e/savage-road-comes-to-the-dawg-house-tickets-48141455389?aff=ebapi',
-    # 'artist_id': '1MK90Dn9tMbk16g2Vb2NQp',
-    # 'artist_name': 'A. Savage'}
 
     return render_template("shows.html", data=data, zipcode=zipcode, 
             artists=artists, distance=distance, shows=shows, selected_artists=artists)
@@ -229,11 +157,16 @@ def display_top_artist_events():
 def process_user_shows():
     """processes selected shows and redirects to viewpage"""
 
-    user_id = session['user_info']['user_id']
+    # user_id = session['user_info']['user_id']
 
-    user = User.query.filter_by(spotify_user_id=user_id).one()
+    # user = User.query.filter_by(spotify_user_id=user_id).one()
+
+    user = get_user_object()
 
     shows = request.args.getlist('shows')
+
+    # shows from related artists aren't getting added to db right now! help.
+    # they need to be passed in a similar way to what's happening here.
 
     if shows:
         for show in shows:
@@ -253,6 +186,7 @@ def process_user_shows():
                                     art_url=request.args.get(show+"_artist_art_url"),
                                     )
                     artists.append(artist)
+
 
                 new_show = Event(eventbrite_event_id=request.args.get(show+"_eventbrite_event_id"),
                                   event_name=request.args.get(show+"_event_name"),
@@ -281,13 +215,116 @@ def display_user_shows():
     user = User.query.filter_by(spotify_user_id=session['user_info']['user_id']).one()
 
     return render_template("hello_shows.html", shows=user.events)
+    # sort by start date
+
+##############################################################################
+# HELPER FUNCTIONS BELOW!
+
+def grab_user_info():
+    """Get's user info from spotify and puts in session"""
+
+    me = spotify.get('v1/me').data
+
+    user_id = me['id']
+
+    session['user_info'] = {'user_id' : me['id'],
+                            'user_display_name' : me['display_name'],
+                            'user_followers' : me['followers']['total'],
+                            'user_pic_url' : me['images'][0]['url']
+                            }
+    return #??????????
+
+def get_user_object():
+    """Queries db for user object using user info in session"""
+
+    grab_user_info()
+
+    user = db.session.query(User).filter(User.spotify_user_id == session['user_info']['user_id']).one()
+    
+    return user
+
+def gets_user_top_artists(user):
+    """Pulls user's top artists from spotify returns json"""
+
+    scope = 'user-top-read'
+
+    items = spotify.get('v1/me/top/artists?time_range=short_term&limit=50&offset=1').data['items']
+    
+    return items
+
+# def user_in_db():
+
+def add_artist_users_artists(user, items):
+    for item in items:
+        if item['id'] not in [artist.spotify_artist_id for artist in user.artists]:
+            artist = Artist(spotify_artist_id=item['id'],
+                        name=item['name'],
+                        art_url=item['images'][0]['url'],
+                        users=[user])
+            db.session.add(artist)
+        else:
+            artist = db.session.query(Artist).filter(Artist.spotify_artist_id == item['id']).one()
+            artist.users.append(user)
+    db.session.commit()
+
+# def add_event_users_events():
+
+# def add_event_artists_events():
+
+# def adds_user_to_db():
+
+# def adds_event_to_db():
+
+def get_related_artists(artist_id, user):
+    """Gets related artists based on users selection"""
+
+    from process import process_related_artists
+    related_artists = process_related_artists(related_artists_dict, user)
+
+    related_artists_dict = {}
+    related_artists = spotify.get('v1/artists/{}/related-artists'.format(artist_id)).data
+    related_artists_dict[artist_id] = related_artists
+
+
+    return related_artists_dict
+
+def get_eventbrite_json(artists, distance, zipcode):
+    """Get's data as json from eventbrite"""
+    
+    requests_list = []
+    for artist in artists:
+        artist = "+".join(artist.split())
+        evt_request = {"method": "GET",
+                       "relative_url": "events/search/",
+                       "body":"token={}&q={}&location.address={}&location.within={}&categories=103".format(eventbrite_token, artist, zipcode, distance)
+                        }
+        requests_list.append(evt_request)
+
+
+    headers = {'Authorization': 'Bearer ' + eventbrite_token}
+
+    response = requests.post(eventbrite_url+"batch/", 
+                            headers=headers,
+                            data={"batch": json.dumps(requests_list)})
+    data = response.json()
+
+    return data
+
+def get
+
+# still having trouble connecting event to artist, need to make sure that
+# it's not in the database already - separate into other functions!
+
+
+
+
 
 
 
 
 if __name__ == '__main__':
     app.debug = True
-    connect_to_db(app)
+    connect_to_db(app, 'postgresql:///amandasapp')
     db.create_all()
     app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
     DebugToolbarExtension(app)
