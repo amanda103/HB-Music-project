@@ -2,7 +2,7 @@
 
 
 <div class="related">
-{% for artists in related_artists.values() %}
+{% for artists in related_artists_dict.values() %}
   {% for artist in artists %}
 
     <p class = "artists"> {{ artist['name'] }}</p>
@@ -10,7 +10,12 @@
     <img src="{{ artist['art_url'] }}" class="related-artist" data-artistId="{{artist['id']}}">
     <br>
     <input type="checkbox" name="search-events-artists"
-                       value="{{ artist['name'] }}"/>
+                       value="{{ artist['spotify_artist_id'] }}"/>
+    <input type="hidden" class="{{artist['spotify_artist_id']}}" name="{{artist['spotify_artist_id']}}_artist_id" value="{{artist['spotify_artist_id']}}">
+
+    <input type="hidden" class="{{artist['spotify_artist_id']}}" name="{{artist['spotify_artist_id']}}_artist_name" value="{{artist['name']}}">
+
+    <input type="hidden" class="{{artist['id']}}" name="{{artist['spotify_artist_id']}}_artist_art_url" value="{{artist['art_url']}}">
     <label>I want to see these events!</label>
 
   {% endfor %}

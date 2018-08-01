@@ -3,3 +3,5 @@ secrets.sh
 *.DS_Store
 *.pyc
 *.json
+testing
+.coverage

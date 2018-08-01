@@ -115,9 +115,12 @@ class ArtistsEvents(db.Model):
 
 def example_data():
     """Create example data for the test database."""
-    User.query.delete()
-    Artist.query.delete()
+    UsersArtists.query.delete()
+    ArtistsEvents.query.delete()
+    UsersEvents.query.delete()
     Event.query.delete()
+    Artist.query.delete()
+    User.query.delete()
 
     user1 = User(spotify_user_id='21wmm4r33y7chvtoc67kxxouq',
                  display_name='Graham Hill', pic_url='https://vetstreet.brightspotcdn.com/dims4/default/5b3ffe7/2147483647/thumbnail/180x180/quality/90/?url=https%3A%2F%2Fvetstreet-brightspot.s3.amazonaws.com%2F8e%2F4e3910c36111e0bfca0050568d6ceb%2Ffile%2Fhub-dogs-puppy.jpg')
