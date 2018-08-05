@@ -2,30 +2,36 @@
 
 {% block content %}
 
-<h1> here's the related artists from spotify {{ related_artists }}</h1>
+<!-- <h1> here's the related artists from spotify {{ related_artists }}</h1> -->
 
-<h2>Here are the artists you want to search for</h2>
+<!-- <h2>Here are the artists you want to search for</h2>
  {% for artist in artists_by_name %}
 <h2>{{ artist }}<h2>
 <br>
-    {% endfor %}
+    {% endfor %} -->
 
-    <h2>HERE IS YOUR process data{{ shows }}<h2>
 
 <h1 id="zipcode">Your zipcode is : {{ zipcode }}</h1>
 <h1>Here are the shows within {{ distance }}!</h1>
 
-<h1></h1>
 {% if shows %}
-        <form action="/account/shows" method="GET">
+        <form id="form-shows" action="/account/shows" method="GET">
     {% for id, info in shows.items() %}
-        {{ show }}
         <ul>
             <h2>{{ info['name'] }}</h2>
             <li><p>When: {{ info['start'].strftime("%A, %B %d, %Y at %I:%M%p")  }}</p></li>
             <button type="button" href="{{info['url']}}">Buy Tickets!</button>
             <!-- if I call this with an a tag I can link but I want it to be a button -->
+            <label>I'm going to this event!</label>
+
+            <input type="checkbox" name="shows"
+                   value="{{ info['event_id'] }}" checked/>
+
+            <img class="show-clickable" src="{{ info['logo']['url'] }}" data-show-id="{{id}}">
+
             <div>
+            <input type="hidden" class="{{id}}">        
+
             <input type="hidden" class="{{id}}" name="{{id}}_eventbrite_event_id" value="{{info['event_id']}}">
 
             <input type="hidden" class="{{id}}" name="{{id}}_event_name" value="{{info['name']}}">
@@ -43,13 +49,7 @@
             <input type="hidden" class="{{id}}" name="{{id}}_artist_id" value="{{info['artist_id']}}">
 
             </div>
-            <input type="checkbox" name="shows"
-                   value="{{ info['event_id'] }}"/>
-            <label>I'm going to this event!</label>
-            <div>
-            <img src="{{ info['logo']['url'] }}">
 
-        </div>
         </ul>
         
     {% endfor %}
@@ -62,5 +62,7 @@
     <button type="submit">My shows</button>
 </form>
 {% endif %}
+
+  <script src="static/listener_shows.js"></script>
 
 {% endblock %}

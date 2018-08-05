@@ -3,19 +3,18 @@
 {% block content %}
 
 <h1>{{ session['user_info']['user_display_name'] }}</h1>
-<!-- <h1>{{ session }}</h1> -->
 
-<img src="{{ session['user_info']['user_pic_url'] }}" alt="Profile Picture">
+<img id="pofilepic" src="{{ session['user_info']['user_pic_url'] }}" alt="Profile Picture">
+
+<h1>{{ shows }}</h1>
+
+<div>
 
 {% for show in shows %}
 <p>{{show.event_name}} on {{show.start.strftime("%A, %B %d, %Y at %I:%M%p")}}</p>
-<img src="{{show.logo_url}}">
+<img class="shows-attending" src="{{show.logo_url}}">
 {% endfor %}
 
-
-
-
-
-
+</div>
 
 {% endblock %}

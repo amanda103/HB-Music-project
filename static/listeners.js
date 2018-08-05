@@ -1,15 +1,6 @@
 "use strict";
 
-function displayRelatedArtists(evt) {
-    $.get('/account'), {}, function(data) {
-        $('#form').on('click', function(evt) {
-            let target = $(evt.target);
-        })
-    }
-}
-
-
-let form = $('form');
+let formArtists = $('form#form-artists');
 
 function getRelatedArtists(evt) {
     let target = $(evt.target);
@@ -27,7 +18,14 @@ function getRelatedArtists(evt) {
 
 }
 
-form.on('click', getRelatedArtists);
+formArtists.on('click', getRelatedArtists);
+
+
+
+
+
+
+// add on click to deselect artist to search
 
 // add zipcode validator on submit
 // add border on hover to main-artist

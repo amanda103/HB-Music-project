@@ -1,0 +1,85 @@
+
+
+body {
+    /*background-image: url("/static/abstract-abstract-painting-art-304690.jpg");*/
+    background-color: #33A76B;
+}
+
+h1, h2 {
+    /*color: #B2362C;*/
+    color: black;
+    font-family: monospace;
+}
+
+img#profilepic {
+    border-radius: 50%;
+    height: 30em;
+    width: 30em;
+
+}
+
+img.related-artist {
+
+    border-radius: 50%;
+    height: 13em;
+    width: 13em
+}
+
+img.main-artists {
+    border-radius: 50%;
+    height: 30em;
+    width: 30em;
+}
+
+img.main-artists-clickable {
+    border-radius: 50%;
+    height: 30em;
+    width: 30em;
+}
+
+p.artists {
+    font-family: monospace;
+    font-size: 4em;
+    font-weight: bold;
+}
+p.related-artists {
+    font-family: monospace;
+    font-size: 2em;
+    font-weight: bold;
+}
+
+.header {
+    text-align: center;
+    font-family: monospace;
+    font-weight: bolder;
+    font-size: 4em;
+}
+
+/*#grad {
+    background: linear-gradient(red, yellow, blue);}*/
+
+img.show {
+    border-radius: 50%;
+    height: 30em;
+    width: 30em;
+}
+
+img.show-clickable {
+    border-radius: 50%;
+    height: 30em;
+    width: 30em;
+}
+
+img.shows-attending {
+    border-radius: 50%;
+    height: 30em;
+    width: 30em;
+    border: black;
+}
+
+img.friends {
+    border-radius: 50%;
+    height: 5em;
+    width: 5em;
+
+}

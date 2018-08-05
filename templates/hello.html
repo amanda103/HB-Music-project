@@ -11,15 +11,13 @@
     </ul>
   {% endif %}
 
-<h2>Here is your session {{ session }}</h2>
-<h1>Your user ID is: {{ session['user_info']['user_id'] }}</h1>
+
 <h1>{{ session['user_info']['user_display_name'] }}</h1>
-<!-- <h1>{{ session }}</h1> -->
 
 <h1>You have this many followers: {{ session['user_info']['user_followers'] }}</h1>
-<img src="{{ session['user_info']['user_pic_url'] }}" alt="Profile Picture">
+<img id="pofilepic" src="{{ session['user_info']['user_pic_url'] }}" alt="Profile Picture">
 
-<form action="/search-events" method="GET">
+<form id="form-artists" action="/search-events" method="GET">
   <h2>Here are your recent top artists</h2>
   
   {% for artist in artists_info %}
@@ -31,7 +29,7 @@
 
     <br>
     <input type="checkbox" name="search-events-artists"
-                       value="{{ artist['id'] }}"/>
+                       value="{{ artist['id'] }}" checked/>
 
 
     <input type="hidden" class="{{artist['id']}}" name="{{artist['id']}}_artist_name" value="{{artist['name']}}">
@@ -43,7 +41,7 @@
   
   <div class="form-group">
     <label for="event-loc">Zipcode</label>
-    <input id="event-loc" class="form-control" type="text" name="zipcode" required>
+    <input id="event-loc" class="form-control" type="text" name="zipcode" required max="5" pattern="[0-9]{5}">
   </div>
 
   <input id="zipcode-submit" type="submit" value="Search Events!" class="btn">

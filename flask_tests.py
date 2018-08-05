@@ -120,7 +120,7 @@ class FlaskTest(unittest.TestCase):
         """tests if selected show gets added to shows attending page"""
         user = _mock_get_user_object()
         new_show = Event(eventbrite_event_id=47828245571,
-                                  event_name='Amandas show',
+                                  event_name="Amandas show",
                                   venue_id=2348594,
                                   eventbrite_url='https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F47149275%2F220866562708%2F1%2Foriginal.jpg?auto=compress&s=d089677775de2ca1c9bdeec5909cd0f0',
                                   logo_url='https://www.eventbrite.com/e/marisa-anderson-cafe-du-nord-tickets-47828245570?aff=ebapi',
@@ -131,7 +131,7 @@ class FlaskTest(unittest.TestCase):
         db.session.add(new_show)
         db.session.commit()
         result = self.client.get("/account/shows?47001683300_eventbrite_event_id=47001683300&47001683300_event_name=XXYYXX+%26+SWEATER+BEATS+at+MEZZANINE&47001683300_venue_id=11367224&47001683300_eventbrite_url=https%3A%2F%2Fwww.eventbrite.com%2Fe%2Fxxyyxx-sweater-beats-at-mezzanine-tickets-47001683300%3Faff%3Debapi&47001683300_logo_url=https%3A%2F%2Fimg.evbuc.com%2Fhttps%253A%252F%252Fcdn.evbuc.com%252Fimages%252F46169221%252F149753314296%252F1%252Foriginal.jpg%3Fauto%3Dcompress%26s%3Db5e7531496f76a8630e405a889f2f0a9&47001683300_start=2018-08-03+21%3A00%3A00&47001683300_end=2018-08-04+02%3A00%3A00&47001683300_artist_id=1anyVhU62p31KFi8MEzkbf", follow_redirects=True)
-        self.assertIn(b'Amandas show', result.data)
+        self.assertIn(b"Amandas show", result.data)
 
     def test_are_db_shows_displayed(self):
         """tests if shows in db are displayed"""

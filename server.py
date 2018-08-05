@@ -129,17 +129,31 @@ def display_related_artists():
     artist_id = request.args.get('artist_id')
 
     related_artists = get_related_artists(artist_id, user)
-    # print("***********************************************")
-    # print("this is your related artists", related_artists)
-    # print("***********************************************")
+
     from process import process_related_artists
 
     related_artists_dict = process_related_artists(related_artists, user)
-    # print("***********************************************")
-    # print("this is your processed related artists", related_artists_dict)
-    # print("***********************************************")
 
     return render_template("related-artists.html", related_artists_dict=related_artists_dict)   
+
+@app.route("/friends")
+def display_concert_goers():
+    """Gets other users already going to the same concert"""
+
+    event_id = request.args.get('show_id')
+
+    friends = []
+    event_obj = db.session.query(Event).filter(Event.eventbrite_event_id == event_id).first()
+    if event_obj:
+        people = event_obj.users
+        if people:
+            for p in people:
+                if p.spotify_user_id == session['user_info']['user_id']:
+                    continue
+                else:
+                    friends.append(p)
+
+    return render_template("friends.html", people=friends)
 
 
 @app.route("/search-events")
@@ -149,19 +163,9 @@ def display_top_artist_events():
     user = get_user_object()
 
     zipcode = request.args.get('zipcode')
-    # TODO - implement zipcode validation
-    # import zipcodes
-    # if zipcodes.is_valid(zipcode):
-    #     continue
-    # else:
-        # what to do if zipcode isn't valid!! don't reload!
-    # pull this function out and put it in process file --> but what to do if it's not
-    # valid?? Probably prevent default?? Who knows.
 
     distance = "100mi"
-    #TODO
-    # hardcoded now but maybe give user option once I have more artists to search
-    
+   
     artists_by_id = request.args.getlist("search-events-artists")
 
     artists_by_name = []
@@ -176,6 +180,7 @@ def display_top_artist_events():
             session['user_artists'][artist_id] = {"name": name,
                                              "art_url": art_url}
         data = get_eventbrite_json(artists_by_name, distance, zipcode)
+
     else:
         return redirect("/account")
 
@@ -195,33 +200,12 @@ def process_user_shows():
 
     shows = request.args.getlist('shows')
 
-    #FIXME
-    # artists are getting added in a funny way...
-    # artists don't always correlate to the eventbrite search
-    # research the eventbrite api endpoints and see what can be done here
-
     if shows:
         for show in shows:
-            artists = db.session.query(Artist).filter(Event.eventbrite_event_id==show).all()
-            #TODO
-            # artists at event that way it will be ALL artists at event id
-            # add line about artist in db or no to be sure that the artist get's added
-            if show not in [event.eventbrite_event_id for event in user.events]:
-                #FIXME
-                # this keeps throwing an error -- why is it still showing me shows that are
-                # alreday in db??
-                is_artist_there = db.session.query(Artist).filter(Artist.spotify_artist_id == request.args.get(show+"_artist_id")).first()
-                if is_artist_there:
-                    artists.append(is_artist_there)
-                else:
-                    artist_id = request.args.get(show+"_artist_id")
-                    artist = Artist(spotify_artist_id=artist_id,
-                                    name=session['user_artists'][artist_id]['name'],
-                                    art_url=session['user_artists'][artist_id]['art_url'],
-                                    )
-                    artists.append(artist)
-
-
+            show_there = db.session.query(Event).filter(Event.eventbrite_event_id==show).first()
+            if show_there and show not in [event.eventbrite_event_id for event in user.events]:
+                user.events.append(show_there)
+            else:
                 new_show = Event(eventbrite_event_id=request.args.get(show+"_eventbrite_event_id"),
                                   event_name=request.args.get(show+"_event_name"),
                                   venue_id=request.args.get(show+"_venue_id"),
@@ -230,7 +214,6 @@ def process_user_shows():
                                   start=request.args.get(show+"_start"),
                                   end=request.args.get(show+"_end"),
                                   users=[user],
-                                  artists=artists,
                                 )
                 db.session.add(new_show)
         db.session.commit()
@@ -243,9 +226,11 @@ def display_user_shows():
 
     user = User.query.filter_by(spotify_user_id=session['user_info']['user_id']).one()
 
-    return render_template("hello_shows.html", shows=user.events)
+    shows = user.events
     #TODO
-    # sort by start date
+    # sort by start date to display by date and get rid of those that are past now
+
+    return render_template("hello_shows.html", shows=shows)
 
 ##############################################################################
 # HELPER FUNCTIONS BELOW!
@@ -258,10 +243,20 @@ def grab_user_info():
 
     user_id = me['id']
 
+    if me['images']:
+        image = me['images'][0]['url']
+    else:
+        image = 'http://www.whothehelldoeshethinkheis.com/wp-content/uploads/2014/03/Homer-Simpsons-Music-Headphones-Anime.jpg'
+
+    if me['display_name']:
+        name = me['display_name']
+    else:
+        name = me['id']
+
     session['user_info'] = {'user_id' : me['id'],
-                            'user_display_name' : me['display_name'],
+                            'user_display_name' : name,
                             'user_followers' : me['followers']['total'],
-                            'user_pic_url' : me['images'][0]['url']
+                            'user_pic_url' : image
                             }
     #FIXME do i need to delete here?
     # del session['user_artists']
@@ -282,7 +277,7 @@ def gets_user_top_artists(user):
 
     scope = 'user-top-read'
 
-    items = spotify.get('v1/me/top/artists?time_range=short_term&limit=50&offset=1').data['items']
+    items = spotify.get('v1/me/top/artists?time_range=short_term&limit=5&offset=1').data['items']
     
     return items
 
@@ -341,10 +336,10 @@ def get_eventbrite_json(artists, distance, zipcode):
 
 
 if __name__ == '__main__':
-    # app.debug = True
+    app.debug = True
     connect_to_db(app, 'postgresql:///amandasapp')
     db.create_all()
-    app.config['DEBUG'] = False
+    app.config['DEBUG'] = True
     app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
-    # DebugToolbarExtension(app)
+    DebugToolbarExtension(app)
     app.run(host='0.0.0.0')
