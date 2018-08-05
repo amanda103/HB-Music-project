@@ -226,11 +226,16 @@ def display_user_shows():
 
     user = User.query.filter_by(spotify_user_id=session['user_info']['user_id']).one()
 
-    shows = user.events
-    #TODO
-    # sort by start date to display by date and get rid of those that are past now
+    shows = db.session.query(Event).order_by(Event.start.asc()).all()
 
-    return render_template("hello_shows.html", shows=shows)
+
+    upcoming_shows_chron = []
+
+    for show in shows:
+        if show in user.events and show.start > datetime.today():
+            upcoming_shows_chron.append(show)
+
+    return render_template("hello_shows.html", shows=upcoming_shows_chron)
 
 ##############################################################################
 # HELPER FUNCTIONS BELOW!
