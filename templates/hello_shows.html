@@ -20,11 +20,11 @@
     <div class="other-users">
         {% for user in show.users %}
         {% if user.spotify_user_id != session['user_info']['user_id'] %}
+        <p class="sub-name">Other attendees! Click on their picture to see saved shows</p>
         <img class="friends" src="{{user.pic_url}}" data-spotify-id="{{user.spotify_user_id}}">
         <p class="sub-name">{{user.display_name}}</p>
-        {% endfor %}
-        <p class="sub-name">Other attendees! Click on their picture to see saved shows</p>
         {% endif %}
+        {% endfor %}
     {% endif %}    
     </div>
   </div>
