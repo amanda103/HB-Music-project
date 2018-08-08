@@ -1,23 +1,84 @@
 
+{% for artist in related_artists_dict.values() %}
+  <div class="row">
+        <div class="col">
+          <p class = "related-artists"> {{ artist[0]['name'] }}</p>
 
+          <img src="{{ artist[0]['art_url'] }}" class="related-artist" data-artistId="{{artist[0]['id']}}">
+          <br>
+          <input type="checkbox" name="search-events-artists"
+                             value="{{ artist[0]['spotify_artist_id'] }}" checked/>
+          <input type="hidden" class="{{artist[0]['spotify_artist_id']}}" name="{{artist[0]['spotify_artist_id']}}_artist_id" value="{{artist[0]['spotify_artist_id']}}">
 
-<div>
-{% for artists in related_artists_dict.values() %}
-  {% for artist in artists %}
+          <input type="hidden" class="{{artist[0]['spotify_artist_id']}}" name="{{artist[0]['spotify_artist_id']}}_artist_name" value="{{artist[0]['name']}}">
 
-    <p class = "related-artists"> {{ artist['name'] }}</p>
+          <input type="hidden" class="{{artist[0]['id']}}" name="{{artist[0]['spotify_artist_id']}}_artist_art_url" value="{{artist[0]['art_url']}}">
+        </div>
+        <div class="col">
+        <p class = "related-artists"> {{ artist[1]['name'] }}</p>
 
-    <img src="{{ artist['art_url'] }}" class="related-artist" data-artistId="{{artist['id']}}">
-    <br>
-    <input type="checkbox" name="search-events-artists"
-                       value="{{ artist['spotify_artist_id'] }}" checked/>
-    <input type="hidden" class="{{artist['spotify_artist_id']}}" name="{{artist['spotify_artist_id']}}_artist_id" value="{{artist['spotify_artist_id']}}">
+          <img src="{{ artist[1]['art_url'] }}" class="related-artist" data-artistId="{{artist[1]['id']}}">
+          <br>
+          <input type="checkbox" name="search-events-artists"
+                             value="{{ artist[1]['spotify_artist_id'] }}" checked/>
+          <input type="hidden" class="{{artist[1]['spotify_artist_id']}}" name="{{artist[1]['spotify_artist_id']}}_artist_id" value="{{artist[1]['spotify_artist_id']}}">
 
-    <input type="hidden" class="{{artist['spotify_artist_id']}}" name="{{artist['spotify_artist_id']}}_artist_name" value="{{artist['name']}}">
+          <input type="hidden" class="{{artist[1]['spotify_artist_id']}}" name="{{artist[1]['spotify_artist_id']}}_artist_name" value="{{artist[0]['name']}}">
 
-    <input type="hidden" class="{{artist['id']}}" name="{{artist['spotify_artist_id']}}_artist_art_url" value="{{artist['art_url']}}">
-    <label>I want to see these events!</label>
+          <input type="hidden" class="{{artist[1]['id']}}" name="{{artist[1]['spotify_artist_id']}}_artist_art_url" value="{{artist[1]['art_url']}}">
+        </div>
+        <div class="col">
+        <p class = "related-artists"> {{ artist[2]['name'] }}</p>
 
+          <img src="{{ artist[2]['art_url'] }}" class="related-artist" data-artistId="{{artist[2]['id']}}">
+          <br>
+          <input type="checkbox" name="search-events-artists"
+                             value="{{ artist[2]['spotify_artist_id'] }}" checked/>
+          <input type="hidden" class="{{artist[2]['spotify_artist_id']}}" name="{{artist[2]['spotify_artist_id']}}_artist_id" value="{{artist[2]['spotify_artist_id']}}">
+
+          <input type="hidden" class="{{artist[2]['spotify_artist_id']}}" name="{{artist[2]['spotify_artist_id']}}_artist_name" value="{{artist[2]['name']}}">
+
+          <input type="hidden" class="{{artist[2]['id']}}" name="{{artist[2]['spotify_artist_id']}}_artist_art_url" value="{{artist[2]['art_url']}}">
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+        <p class = "related-artists"> {{ artist[3]['name'] }}</p>
+
+          <img src="{{ artist[3]['art_url'] }}" class="related-artist" data-artistId="{{artist[3]['id']}}">
+          <br>
+          <input type="checkbox" name="search-events-artists"
+                             value="{{ artist[3]['spotify_artist_id'] }}" checked/>
+          <input type="hidden" class="{{artist[3]['spotify_artist_id']}}" name="{{artist[3]['spotify_artist_id']}}_artist_id" value="{{artist[3]['spotify_artist_id']}}">
+
+          <input type="hidden" class="{{artist[3]['spotify_artist_id']}}" name="{{artist[3]['spotify_artist_id']}}_artist_name" value="{{artist[3]['name']}}">
+
+          <input type="hidden" class="{{artist[3]['id']}}" name="{{artist[3]['spotify_artist_id']}}_artist_art_url" value="{{artist[3]['art_url']}}"></div>
+        <div class="col">
+          <p class = "related-artists"> {{ artist[4]['name'] }}</p>
+
+          <img src="{{ artist[4]['art_url'] }}" class="related-artist" data-artistId="{{artist[4]['id']}}">
+          <br>
+          <input type="checkbox" name="search-events-artists"
+                             value="{{ artist[4]['spotify_artist_id'] }}" checked/>
+          <input type="hidden" class="{{artist[4]['spotify_artist_id']}}" name="{{artist[4]['spotify_artist_id']}}_artist_id" value="{{artist[4]['spotify_artist_id']}}">
+
+          <input type="hidden" class="{{artist[4]['spotify_artist_id']}}" name="{{artist[4]['spotify_artist_id']}}_artist_name" value="{{artist[4]['name']}}">
+
+          <input type="hidden" class="{{artist[4]['id']}}" name="{{artist[4]['spotify_artist_id']}}_artist_art_url" value="{{artist[4]['art_url']}}"></div>
+        <div class="col">
+          <p class = "related-artists"> {{ artist[5]['name'] }}</p>
+
+          <img src="{{ artist[5]['art_url'] }}" class="related-artist" data-artistId="{{artist[5]['id']}}">
+          <br>
+          <input type="checkbox" name="search-events-artists"
+                             value="{{ artist[5]['spotify_artist_id'] }}" checked/>
+          <input type="hidden" class="{{artist[5]['spotify_artist_id']}}" name="{{artist[5]['spotify_artist_id']}}_artist_id" value="{{artist[5]['spotify_artist_id']}}">
+
+          <input type="hidden" class="{{artist[5]['spotify_artist_id']}}" name="{{artist[5]['spotify_artist_id']}}_artist_name" value="{{artist[5]['name']}}">
+
+          <input type="hidden" class="{{artist[5]['id']}}" name="{{artist[5]['spotify_artist_id']}}_artist_art_url" value="{{artist[5]['art_url']}}"></div>
+      </div>
   {% endfor %}
-{% endfor %}
-</div>
+
+

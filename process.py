@@ -39,22 +39,16 @@ def process_eventbrite_json(data, artists):
 
 
 def process_related_artists(related_artists, user):
-    """takes in selected artists, sends to spotify and processes related artists for helpful info"""
-
-    # FIXME
-    # truncate dict if it's longer than a certain number
-    # so that related artists doesn't display 20 dif artists
+    """processes related artists from spotify for helpful info, returns six artists"""
 
     displayed_artists = {}
     for artist_id, artists in related_artists.items():
         displayed_artists[artist_id] = []
-        # TODO:
-        # while len(displayed_artists[artist_id]) <= 4:
-        # still figuring out how to limit the number of related artists I get back
-        # that way I don't end up with 20 to display! But maybe that's not a bad thing?
-        # or i could also have a list that gets clicked through kind of like neflix shows
 
         for value in artists.values():
+            if len(value) > 6:
+                shuffle(value)
+                value = sample(value, 6)
             for v in value:
                 if v['images']:
                     image = v['images'][0]['url']

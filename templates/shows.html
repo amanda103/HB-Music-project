@@ -2,67 +2,51 @@
 
 {% block content %}
 
-<!-- <h1> here's the related artists from spotify {{ related_artists }}</h1> -->
-
-<!-- <h2>Here are the artists you want to search for</h2>
- {% for artist in artists_by_name %}
-<h2>{{ artist }}<h2>
-<br>
-    {% endfor %} -->
-
-
-<h1 id="zipcode">Your zipcode is : {{ zipcode }}</h1>
-<h1>Here are the shows within {{ distance }}!</h1>
-
 {% if shows %}
-        <form id="form-shows" action="/account/shows" method="GET">
-    {% for id, info in shows.items() %}
-        <ul>
-            <h2>{{ info['name'] }}</h2>
-            <li><p>When: {{ info['start'].strftime("%A, %B %d, %Y at %I:%M%p")  }}</p></li>
-            <button type="button" href="{{info['url']}}">Buy Tickets!</button>
-            <!-- if I call this with an a tag I can link but I want it to be a button -->
-            <label>I'm going to this event!</label>
+<form id="form-shows" action="/account/shows" method="GET">
+{% for id, info in shows.items() %}
+<div class="row show">
+    <div class="col-xs-12 col-md-6 order-md-1 col-lg-6 order-lg-1">
+        <img class="object-fit_contain" src="{{ info['logo']['url'] }}" data-show-id="{{id}}">
 
-            <input type="checkbox" name="shows"
-                   value="{{ info['event_id'] }}" checked/>
+        <input type="hidden" class="{{id}}" name="{{id}}_eventbrite_event_id" value="{{info['event_id']}}">
 
-            <img class="show-clickable" src="{{ info['logo']['url'] }}" data-show-id="{{id}}">
+        <input type="hidden" class="{{id}}" name="{{id}}_event_name" value="{{info['name']}}">
 
-            <div>
-            <input type="hidden" class="{{id}}">        
+        <input type="hidden" class="{{id}}" name="{{id}}_venue_id" value="{{info['venue_id']}}">
 
-            <input type="hidden" class="{{id}}" name="{{id}}_eventbrite_event_id" value="{{info['event_id']}}">
+        <input type="hidden" class="{{id}}" name="{{id}}_eventbrite_url" value="{{info['url']}}">
 
-            <input type="hidden" class="{{id}}" name="{{id}}_event_name" value="{{info['name']}}">
+        <input type="hidden" class="{{id}}" name="{{id}}_logo_url" value="{{info['logo']['url']}}">
 
-            <input type="hidden" class="{{id}}" name="{{id}}_venue_id" value="{{info['venue_id']}}">
+        <input type="hidden" class="{{id}}" name="{{id}}_start" value="{{info['start']}}">
 
-            <input type="hidden" class="{{id}}" name="{{id}}_eventbrite_url" value="{{info['url']}}">
+        <input type="hidden" class="{{id}}" name="{{id}}_end" value="{{info['end']}}">
 
-            <input type="hidden" class="{{id}}" name="{{id}}_logo_url" value="{{info['logo']['url']}}">
-
-            <input type="hidden" class="{{id}}" name="{{id}}_start" value="{{info['start']}}">
-
-            <input type="hidden" class="{{id}}" name="{{id}}_end" value="{{info['end']}}">
-
-            <input type="hidden" class="{{id}}" name="{{id}}_artist_id" value="{{info['artist_id']}}">
-
-            </div>
-
-        </ul>
-        
-    {% endfor %}
-    <input type="submit" value="YOU'RE GOING!" class="btn">
-    </form>
+        <input type="hidden" class="{{id}}" name="{{id}}_artist_id" value="{{info['artist_id']}}">
+    </div>
+    <div class="show-text col-xs-12 order-md-2 col-md-6 order-lg-2 col-lg-5">
+        <p class="sub">{{ info['name'] }}</p>
+        <p class="sub-name">When: {{ info['start'].strftime("%A, %B %d, %Y at %I:%M%p")  }}</p>
+        <input type="checkbox" name="shows"
+                   value="{{ info['event_id'] }}" checked/><label class="sub-name">GOING!</label>
+        <!-- FIXME: CAN I MAKE THIS CHECKBOX INVISIBLE AND CHECK IT IF THE PIC IS HIGHLIGHTED? -->       
+    </div>
+</div>
+{% endfor %}
+<div class="row going-button">
+    <div class="col-2" align=right>
+        <input type="submit" value="YOU'RE GOING!" class="sub-small">
+    </div>
+</div>
+</form>
 
 {% else %}
-<h1>You're already going to all available shows near you! Try searching in another location</h1> 
+<h1>OOPS! No shows available with those parameters, try searching another zipcode or some related artists!</h1> 
 <form method="get" action="/account/shows">
     <button type="submit">My shows</button>
 </form>
 {% endif %}
 
-  <script src="static/listener_shows.js"></script>
 
 {% endblock %}

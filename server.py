@@ -85,12 +85,10 @@ def get_spotify_oauth_token():
 @app.route("/logout")
 def logout():
     """Logout"""
-    #TODO - make a button to let users do this without having to go to the route
-    # directly
-    del session['oauth_token']
-    flash("Logout successful")
 
-    return render_template("homepage.html")
+    del session['oauth_token']
+
+    return render_template("logout.html")
 
 @app.route("/account")
 def show_acct_info():
@@ -108,16 +106,8 @@ def show_acct_info():
         db.session.commit()
 
     items = gets_user_top_artists(user)
-    #TODO
-    #only getting the first image - is this important? idk
-    #only saving the top artists - not related artiests
 
     return render_template("hello.html", artists_info=items)
-
-
-
-# TODO: store seached artists in session, once they pick a show 
-# with that artist then add artist to db
 
 
 @app.route("/related-artists")
@@ -135,6 +125,7 @@ def display_related_artists():
     related_artists_dict = process_related_artists(related_artists, user)
 
     return render_template("related-artists.html", related_artists_dict=related_artists_dict)   
+
 
 @app.route("/friends")
 def display_concert_goers():
@@ -189,7 +180,8 @@ def display_top_artist_events():
     shows = process_eventbrite_json(data, artists_by_id)
 
     return render_template("shows.html", zipcode=zipcode, 
-                            distance=distance, shows=shows, artists_by_name=artists_by_name)
+                            distance=distance, shows=shows,
+                            artists_by_name=artists_by_name)
 
 
 @app.route("/account/shows")
@@ -228,7 +220,6 @@ def display_user_shows():
 
     shows = db.session.query(Event).order_by(Event.start.asc()).all()
 
-
     upcoming_shows_chron = []
 
     for show in shows:
@@ -236,6 +227,46 @@ def display_user_shows():
             upcoming_shows_chron.append(show)
 
     return render_template("hello_shows.html", shows=upcoming_shows_chron)
+
+
+@app.route("/<variable>/shows/attending", methods=['GET', 'POST'])
+def other_user_profile(variable):
+    """Generates other user's profile and saved shows"""
+
+    other_user = db.session.query(User).filter(User.spotify_user_id==variable).one()
+
+    shows = db.session.query(Event).order_by(Event.start.asc()).all()
+
+    upcoming_shows_chron = []
+
+    for show in shows:
+        if show in other_user.events and show.start > datetime.today():
+            upcoming_shows_chron.append(show)
+
+    return render_template("other-user.html",
+                            other_user=other_user,
+                            upcoming_shows_chron=upcoming_shows_chron)
+
+
+@app.route("/add-show/<variable>")
+def add_show(variable):
+    """adds show to users shows in db"""
+    
+    user = get_user_object()
+
+    event_id = variable
+
+    event = db.session.query(Event).filter(Event.event_id==event_id).one()
+
+    if user not in event.users:
+        event.users.append(user)
+        db.session.commit()
+
+    return redirect("/account/shows/attending")
+
+
+
+
 
 ##############################################################################
 # HELPER FUNCTIONS BELOW!
@@ -341,10 +372,10 @@ def get_eventbrite_json(artists, distance, zipcode):
 
 
 if __name__ == '__main__':
-    app.debug = True
+    # app.debug = True
     connect_to_db(app, 'postgresql:///amandasapp')
     db.create_all()
-    app.config['DEBUG'] = True
+    # app.config['DEBUG'] = True
     app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
-    DebugToolbarExtension(app)
+    # DebugToolbarExtension(app)
     app.run(host='0.0.0.0')

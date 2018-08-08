@@ -3,10 +3,12 @@
 {% for p in people %}
     <h2>These people are also going to this show<h2>
     <img class="friends" src="{{ p.pic_url }}">
-    <p class="friends">{{ p.display_name }}</p>
+    <p class="sub friends">{{ p.display_name }}</p>
      {% endfor %}
     {% else %}
-    <p>No one you know is going to this yet!</p>
+    <p class="sub friends">No one you know is going to this yet!</p>
     {% endif %}
 
     </div>
+
+    <!-- TODO: PUT THIS IN ROW/COLUMN -->

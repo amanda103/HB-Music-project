@@ -11,8 +11,8 @@ function getRelatedArtists(evt) {
         // add class to target to indicate that it has been clicked
         let artistId = target.data('artist-id');
         $.get('/related-artists', {'artist_id': artistId}, function(data) {
-            let parent = target.parent();
-            parent.append(data);
+            let related_div = target.parent().next();
+            related_div.append(data);
         });
     }
 

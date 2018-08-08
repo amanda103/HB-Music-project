@@ -2,51 +2,39 @@
 
 {% block content %}
 
+<div>
 
-  {% if messages %}
-    <ul class=flashes>
-    {% for message in messages %}
-      {{ message }}
-    {% endfor %}
-    </ul>
-  {% endif %}
-
-
-<h1>{{ session['user_info']['user_display_name'] }}</h1>
-
-<h1>You have this many followers: {{ session['user_info']['user_followers'] }}</h1>
-<img id="pofilepic" src="{{ session['user_info']['user_pic_url'] }}" alt="Profile Picture">
 
 <form id="form-artists" action="/search-events" method="GET">
-  <h2>Here are your recent top artists</h2>
+  <div class="row">
+    <div class="col-10">
+      <p class="sub-name">Here are your top artists from Spotify - click on a photo to explore related artists</p>
+    </div>
+    <div class="col-2"><label class="sub-name" for="event-loc">Zipcode</label>
+      <input id="event-loc" class="form-control" type="text" name="zipcode" required max="5" pattern="[0-9]{5}">
+      <input id="zipcode-submit" type="submit" value="SEARCH EVENTS" class="sub-small">
+    </div>
+  </div>
   
-  {% for artist in artists_info %}
-  <div>
-    <p class = "artists"> {{ artist['name'] }}</p>
 
+
+{% for artist in artists_info %}
+<div class="row">
+  <div class="col-4">
+    <p style="padding-top:10px" class = "artists"> {{ artist['name'] }}</p>
     <img src="{{ artist['images'][0]['url'] }}" class="main-artists-clickable" data-artist-id="{{artist['id']}}">
     <br>
+    <input class="checkbox" type="checkbox" name="search-events-artists" value="{{ artist['id'] }}" checked/>
+      <input type="hidden" class="{{artist['id']}}" name="{{artist['id']}}_artist_name" value="{{artist['name']}}">
 
-    <br>
-    <input type="checkbox" name="search-events-artists"
-                       value="{{ artist['id'] }}" checked/>
-
-
-    <input type="hidden" class="{{artist['id']}}" name="{{artist['id']}}_artist_name" value="{{artist['name']}}">
-
-    <input type="hidden" class="{{artist['id']}}" name="{{artist['id']}}_artist_art_url" value="{{artist['images'][0]['url']}}">
-    <label>I want to see these events!</label>
+      <input type="hidden" class="{{artist['id']}}" name="{{artist['id']}}_artist_art_url" value="{{artist['images'][0]['url']}}">
+  </div>
+  <div class="col-8"></div>
   </div>
   {% endfor %}
-  
-  <div class="form-group">
-    <label for="event-loc">Zipcode</label>
-    <input id="event-loc" class="form-control" type="text" name="zipcode" required max="5" pattern="[0-9]{5}">
-  </div>
-
-  <input id="zipcode-submit" type="submit" value="Search Events!" class="btn">
 
 </form>
+</div>
 
   <script src="static/listeners.js"></script>
 

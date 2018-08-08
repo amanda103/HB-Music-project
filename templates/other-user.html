@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<p class="sub-name">{{ other_user.display_name }}</p>
+
+
+<img class="pofile-pic" style="height:10em;width:10em;border-radius:50%;" src="{{ other_user.pic_url }}" alt="Profile Picture">
+
+  {% for show in upcoming_shows_chron %}
+<div class="row show">
+    <div class="col-xs-12 col-md-6 order-md-1 col-lg-6 order-lg-1">
+        
+        <img class="object-fit_contain" src="{{show.logo_url}}">
+
+    </div>
+
+    <div class="show-text col-xs-12 order-md-2 col-md-6 order-lg-2 col-lg-5">
+
+        <p class="sub-name">{{show.event_name}} on {{show.start.strftime("%A, %B %d, %Y at %I:%M%p")}}</p>
+
+        <a href class="sub-name"="{{show.eventbrite_url}}">Buy tickets!</a>
+        <br>
+        <button type="submit" class="add-show sub-small" data-event-id="{{show.event_id}}"class="add-to-my-shows">ADD TO MY SHOWS</button>
+        <p id="success-{{show.event_id}}" class="sub-small" style="display:none">SUCCESS</p>
+      
+    </div>
+</div>
+
+  {% endfor %}
+  <script src="/static/add-show.js"></script>
+
+
+{% endblock %}
