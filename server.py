@@ -37,22 +37,29 @@ spotify = oauth.remote_app(
 def before_request():
     """Make sure user is logged in and if not, redirect"""
     endpoints = ['login', 'spotify_authorized', 'show_acct_info']
+    # print("request: {}".format(request))
+    # print("endpoint: " + request.endpoint)
     if 'user_info' not in session and request.endpoint not in endpoints:
-        return redirect(url_for('login'))
+        # return redirect(url_for('login'))
+        return redirect("http://showspotter.org/login")
 
 @app.route('/')
 def index():
     """Homepage redirects to login"""
-    return redirect(url_for('login'))
+    #return redirect(url_for('login'))
+    return redirect("http://showspotter.org/login")
 
 @app.route('/login')
 def login():
     """Login via spotify credentials"""
-    callback = url_for(
-        'spotify_authorized',
-        next=request.args.get('next') or request.referrer or None,
-        _external=True
-        )
+    #callback = url_for(
+    #    'spotify_authorized',
+    #    next=request.args.get('next') or request.referrer or None,
+    #    _external=True
+    #    )
+    # print("server name: " + app.config['SERVER_NAME'])
+    #print("callback " + callback)
+    callback = "http://showspotter.org/login/authorized"
     return spotify.authorize(callback=callback)
 
 
@@ -373,10 +380,11 @@ def get_eventbrite_json(artists, distance, zipcode):
 
 if __name__ == '__main__':
     # app.debug = True
-    connect_to_db(app, 'postgresql:///amandasapp')
+    connect_to_db(app, 'postgresql:///showspotterdb')
     db.create_all()
     # app.config['DEBUG'] = True
     app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
-    app.config['SERVER_NAME'] = "54.218.231.105"
+    # app.config['SERVER_NAME'] = "showspotter.org:5000"
+    app.config['SERVER_NAME'] = "showspotter.org:5000"
     # DebugToolbarExtension(app)
     app.run(host='0.0.0.0')

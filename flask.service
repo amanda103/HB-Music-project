@@ -1,0 +1,13 @@
+[Unit]
+Description=My Flask App
+After=syslog.target network.target
+
+[Service]
+User=ubuntu
+ExecStart=/bin/bash -c "source /home/ubuntu/HB-Music-project/secrets.sh\
+&& source /home/ubuntu/HB-Music-project/env/bin/activate\
+&& python3 /home/ubuntu/HB-Music-project/server.py &>> /home/ubuntu/HB-Music-project/flask.log"
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
