@@ -377,5 +377,6 @@ if __name__ == '__main__':
     db.create_all()
     # app.config['DEBUG'] = True
     app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
+    app.config['SERVER_NAME'] = "54.218.231.105"
     # DebugToolbarExtension(app)
     app.run(host='0.0.0.0')
