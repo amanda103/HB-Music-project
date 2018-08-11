@@ -43,7 +43,7 @@ Tech Stack:
 -------
 
 Users log into ShowSpotter with Spotify. By using OAuth to validate their credentials the postgres database only stores a users public profile information and does not maintain separate records for user login. After logging in, ShowSpotter queries Spotify for the user’s top five artists.
-![login](http://g.recordit.co/tQVwi6oS6j.gif)
+![login](http://g.recordit.co/SkNENnRVHX.gif)
 
 Users are also able to search for related artists With the help of a jQuery event listener and AJAX to retrieve and format the data from Spotify. Once the user has selected all the artists they're interested in they enter their zipcode which is validated via regular expression.
 ![related-artists](http://g.recordit.co/0HC4UrkBOl.gif)
