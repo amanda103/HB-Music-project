@@ -43,32 +43,17 @@ Tech Stack:
 <a name="features"></a>Features
 -------
 
-Users log into ShowSpotter site with Spotify. By using OAuth to validate their credentials
-the postgres database only stores a users public profile information and 
-not maintain separate records for user login. After logging in, ShowSpotter queries 
-Spotify for the user’s top five artists.
+Users log into ShowSpotter with Spotify. By using OAuth to validate their credentials the postgres database only stores a users public profile information and does not maintain separate records for user login. After logging in, ShowSpotter queries Spotify for the user’s top five artists.
 ![login](http://g.recordit.co/tQVwi6oS6j.gif)
 
-Users are also able to search for related artists With the help of a jQuery event listener 
-and AJAX to retrieve and format the data from Spotify.
+Users are also able to search for related artists With the help of a jQuery event listener and AJAX to retrieve and format the data from Spotify. Once the user has selected all the artists they're interested in they enter their zipcode which is validated via regular expression.
 ![related-artists](http://g.recordit.co/0HC4UrkBOl.gif)
-
-Once the user has selected all the artists they're interested in they enter their zipcode
-which is validated via regular expression.
-![zipcode](http://g.recordit.co/UMN1meIyqL.gif)
 
 The artist information is sent to Eventbrite and the shows are displayed for the user.
 ![shows](http://g.recordit.co/OMzsvKF59w.gif)
 
-Once the user has saved a show, the show image will appear on the My Shows page in a chronological
-carousel.
+Once the user has saved a show, the show image will appear on the My Shows page in a chronological carousel. If other users are also attending a show that has been saved, the user will see their friend's picture displayed below the show carousel. By clicking on a profile picture the user is redirected to thtat person's page of saved shows. This is accomplished by a SQLAlchemy query to the association table set up in the relational database.
 ![my-shows](http://g.recordit.co/uq1lwIRcdl.gif)
-
-If other users are also attending a show that has been saved, the user will see their friend's
-picture displayed below the show carousel. By clicking on a profile picture the user is 
-redirected to thtat person's page of saved shows. This is accomplished by a SQLAlchemy
-query to the association table set up in the relational database.
-![other-users](http://g.recordit.co/KnX74i8638.gif)
 
 When browsing another user's page, the user has the option to save shows to their own profile.
 ![add-shows](http://g.recordit.co/6e3GzhVBZ7.gif)
