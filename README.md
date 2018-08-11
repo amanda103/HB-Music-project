@@ -46,13 +46,13 @@ Users log into ShowSpotter with Spotify. By using OAuth to validate their creden
 ![login](http://g.recordit.co/SkNENnRVHX.gif)
 
 Users are also able to search for related artists With the help of a jQuery event listener and AJAX to retrieve and format the data from Spotify. Once the user has selected all the artists they're interested in they enter their zipcode which is validated via regular expression.
-![related-artists](http://g.recordit.co/0HC4UrkBOl.gif)
+![related-artists](http://g.recordit.co/f0ko6qlI1e.gif)
 
 The artist information is sent to Eventbrite and the shows are displayed for the user.
 ![shows](http://g.recordit.co/iipNT560gX.gif)
 
 Once the user has saved a show, the show image will appear on the My Shows page in a chronological carousel. If other users are also attending a show that has been saved, the user will see their friend's picture displayed below the show carousel. By clicking on a profile picture the user is redirected to thtat person's page of saved shows. This is accomplished by a SQLAlchemy query to the association table set up in the relational database. When browsing another user's page, the user has the option to save shows to their own profile. When browsing another user's page, the user has the option to save shows to their own profile.
-![my-shows](http://g.recordit.co/KcATWgJp4x.gif)
+![my-shows](http://g.recordit.co/KnX74i8638.gif)
 
 
 <a name="future"></a>For Version 2.0
