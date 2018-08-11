@@ -52,7 +52,7 @@ The artist information is sent to Eventbrite and the shows are displayed for the
 ![shows](http://g.recordit.co/iipNT560gX.gif)
 
 Once the user has saved a show, the show image will appear on the My Shows page in a chronological carousel. If other users are also attending a show that has been saved, the user will see their friend's picture displayed below the show carousel. By clicking on a profile picture the user is redirected to thtat person's page of saved shows. This is accomplished by a SQLAlchemy query to the association table set up in the relational database. When browsing another user's page, the user has the option to save shows to their own profile. When browsing another user's page, the user has the option to save shows to their own profile.
-![my-shows](http://g.recordit.co/KnX74i8638.gif)
+![my-shows](http://g.recordit.co/KcATWgJp4x.gif)
 
 
 <a name="future"></a>For Version 2.0
